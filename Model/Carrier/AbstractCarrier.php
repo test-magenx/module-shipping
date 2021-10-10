@@ -405,23 +405,6 @@ abstract class AbstractCarrier extends \Magento\Framework\DataObject implements 
     }
 
     /**
-     * Check if the request has free shipping weight
-     *
-     * @param \Magento\Quote\Model\Quote\Address\RateRequest $request
-     * @return bool
-     */
-    private function hasFreeMethodWeight($request): bool
-    {
-        return (
-            $request->getFreeShipping()
-            || (
-                $request->hasFreeMethodWeight()
-                && ((float) $request->getFreeMethodWeight()) !== ((float) $request->getPackageWeight())
-            )
-        );
-    }
-
-    /**
      * Allows free shipping when all product items have free shipping.
      *
      * @param \Magento\Quote\Model\Quote\Address\RateRequest $request
@@ -431,7 +414,10 @@ abstract class AbstractCarrier extends \Magento\Framework\DataObject implements 
      */
     protected function _updateFreeMethodQuote($request)
     {
-        if (!$this->hasFreeMethodWeight($request)) {
+        if (!$request->getFreeShipping()) {
+            return;
+        }
+        if ($request->getFreeMethodWeight() == $request->getPackageWeight() || !$request->hasFreeMethodWeight()) {
             return;
         }
 

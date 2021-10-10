@@ -380,7 +380,7 @@ class Packaging extends \Magento\Backend\Block\Template
     public function getCustomValueCurrencyCode()
     {
         $orderInfo = $this->getShipment()->getOrder();
-        return $orderInfo->getOrderCurrency()->getCurrencyCode();
+        return $orderInfo->getBaseCurrency()->getCurrencyCode();
     }
 
     /**
