@@ -65,9 +65,6 @@ class CreateLabelTest extends TestCase
      */
     protected $controller;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $this->shipmentLoaderMock = $this->getMockBuilder(ShipmentLoader::class)
@@ -128,17 +125,29 @@ class CreateLabelTest extends TestCase
      *
      * @return void
      */
-    protected function loadShipment(): void
+    protected function loadShipment()
     {
         $orderId = 1;
         $shipmentId = 1;
         $shipment = [];
         $tracking = [];
 
-        $this->requestMock
+        $this->requestMock->expects($this->at(0))
             ->method('getParam')
-            ->withConsecutive(['order_id'], ['shipment_id'], ['shipment'], ['tracking'])
-            ->willReturnOnConsecutiveCalls($orderId, $shipmentId, $shipment, $tracking);
+            ->with('order_id')
+            ->willReturn($orderId);
+        $this->requestMock->expects($this->at(1))
+            ->method('getParam')
+            ->with('shipment_id')
+            ->willReturn($shipmentId);
+        $this->requestMock->expects($this->at(2))
+            ->method('getParam')
+            ->with('shipment')
+            ->willReturn($shipment);
+        $this->requestMock->expects($this->at(3))
+            ->method('getParam')
+            ->with('tracking')
+            ->willReturn($tracking);
         $this->shipmentLoaderMock->expects($this->once())
             ->method('setOrderId')
             ->with($orderId);
@@ -155,10 +164,8 @@ class CreateLabelTest extends TestCase
 
     /**
      * Run test execute method
-     *
-     * @return void
      */
-    public function testExecute(): void
+    public function testExecute()
     {
         $this->shipmentLoaderMock->expects($this->once())
             ->method('load')
@@ -176,10 +183,8 @@ class CreateLabelTest extends TestCase
 
     /**
      * Run test execute method (exception load shipment)
-     *
-     * @return void
      */
-    public function testExecuteLoadException(): void
+    public function testExecuteLoadException()
     {
         $this->shipmentLoaderMock->expects($this->once())
             ->method('load')
@@ -191,10 +196,8 @@ class CreateLabelTest extends TestCase
 
     /**
      * Run test execute method (exception save shipment)
-     *
-     * @return void
      */
-    public function testExecuteSaveException(): void
+    public function testExecuteSaveException()
     {
         $loggerMock = $this->getMockForAbstractClass(LoggerInterface::class);
 
@@ -218,10 +221,8 @@ class CreateLabelTest extends TestCase
 
     /**
      * Run test execute method (fail generate label)
-     *
-     * @return void
      */
-    public function testExecuteLabelGenerateFail(): void
+    public function testExecuteLabelGenerateFail()
     {
         $this->shipmentLoaderMock->expects($this->once())
             ->method('load')

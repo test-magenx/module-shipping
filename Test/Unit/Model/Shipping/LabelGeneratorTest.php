@@ -68,9 +68,6 @@ class LabelGeneratorTest extends TestCase
      */
     private $labelGenerator;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $this->carrierFactory = $this->getMockBuilder(CarrierFactory::class)
@@ -78,12 +75,12 @@ class LabelGeneratorTest extends TestCase
             ->getMock();
         $this->labelsFactory = $this->getMockBuilder(LabelsFactory::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['create'])
+            ->setMethods(['create'])
             ->getMock();
         $this->scopeConfig = $this->getMockForAbstractClass(ScopeConfigInterface::class);
         $this->trackFactory = $this->getMockBuilder(TrackFactory::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['create'])
+            ->setMethods(['create'])
             ->getMock();
         $this->filesystem = $this->getMockBuilder(Filesystem::class)
             ->disableOriginalConstructor()
@@ -99,13 +96,11 @@ class LabelGeneratorTest extends TestCase
     }
 
     /**
-     * @param array $info
-     *
-     * @return void
      * @covers \Magento\Shipping\Model\Shipping\LabelGenerator
+     * @param array $info
      * @dataProvider labelInfoDataProvider
      */
-    public function testAddTrackingNumbersToShipment(array $info): void
+    public function testAddTrackingNumbersToShipment(array $info)
     {
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
@@ -157,33 +152,26 @@ class LabelGeneratorTest extends TestCase
             ->willReturn($labelsMock);
 
         $trackMock = $this->getMockBuilder(Track::class)
-            ->onlyMethods(['setNumber', 'setCarrierCode', 'setTitle'])
+            ->setMethods(['setNumber', 'setCarrierCode', 'setTitle'])
             ->disableOriginalConstructor()
             ->getMock();
+
+        $i = 0;
         $trackingNumbers = is_array($info['tracking_number']) ? $info['tracking_number'] : [$info['tracking_number']];
-
-        $setNumberWithArgs = $setCarrierCodeWithArgs = $setTitleWithArgs = $willReturnArgs = [];
-
         foreach ($trackingNumbers as $trackingNumber) {
-            $setNumberWithArgs[] = [$trackingNumber];
-            $willReturnArgs[] = $trackMock;
-
-            $setCarrierCodeWithArgs[] = [self::CARRIER_CODE];
-
-            $setTitleWithArgs[] = [self::CARRIER_TITLE];
+            $trackMock->expects(static::at($i++))
+                ->method('setNumber')
+                ->with($trackingNumber)
+                ->willReturnSelf();
+            $trackMock->expects(static::at($i++))
+                ->method('setCarrierCode')
+                ->with(self::CARRIER_CODE)
+                ->willReturnSelf();
+            $trackMock->expects(static::at($i++))
+                ->method('setTitle')
+                ->with(self::CARRIER_TITLE)
+                ->willReturnSelf();
         }
-        $trackMock
-            ->method('setNumber')
-            ->withConsecutive(...$setNumberWithArgs)
-            ->willReturnOnConsecutiveCalls(...$willReturnArgs);
-        $trackMock
-            ->method('setCarrierCode')
-            ->withConsecutive(...$setCarrierCodeWithArgs)
-            ->willReturnOnConsecutiveCalls(...$willReturnArgs);
-        $trackMock
-            ->method('setTitle')
-            ->withConsecutive(...$setTitleWithArgs)
-            ->willReturnOnConsecutiveCalls(...$willReturnArgs);
 
         $this->trackFactory->expects(static::any())
             ->method('create')
@@ -199,11 +187,11 @@ class LabelGeneratorTest extends TestCase
     /**
      * @return MockObject
      */
-    private function getShippingMethodMock(): MockObject
+    private function getShippingMethodMock()
     {
         $shippingMethod = $this->getMockBuilder(DataObject::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getCarrierCode'])
+            ->setMethods(['getCarrierCode'])
             ->getMock();
         $shippingMethod->expects(static::once())
             ->method('getCarrierCode')
@@ -215,11 +203,11 @@ class LabelGeneratorTest extends TestCase
     /**
      * @return MockObject
      */
-    private function getCarrierMock(): MockObject
+    private function getCarrierMock()
     {
         $carrierMock = $this->getMockBuilder(AbstractCarrier::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['isShippingLabelsAvailable', 'getCarrierCode'])
+            ->setMethods(['isShippingLabelsAvailable', 'getCarrierCode'])
             ->getMockForAbstractClass();
         $carrierMock->expects(static::once())
             ->method('isShippingLabelsAvailable')
@@ -233,13 +221,12 @@ class LabelGeneratorTest extends TestCase
 
     /**
      * @param array $info
-     *
      * @return MockObject
      */
-    private function getResponseMock(array $info): MockObject
+    private function getResponseMock(array $info)
     {
         $responseMock = $this->getMockBuilder(DataObject::class)
-            ->addMethods(['hasErrors', 'hasInfo', 'getInfo'])
+            ->setMethods(['hasErrors', 'hasInfo', 'getInfo'])
             ->disableOriginalConstructor()
             ->getMock();
         $responseMock->expects(static::once())
@@ -258,11 +245,11 @@ class LabelGeneratorTest extends TestCase
     /**
      * @return array
      */
-    public function labelInfoDataProvider(): array
+    public function labelInfoDataProvider()
     {
         return [
             [['tracking_number' => ['111111', '222222', '333333'], 'label_content' => 'some']],
-            [['tracking_number' => '111111', 'label_content' => 'some']]
+            [['tracking_number' => '111111', 'label_content' => 'some']],
         ];
     }
 }

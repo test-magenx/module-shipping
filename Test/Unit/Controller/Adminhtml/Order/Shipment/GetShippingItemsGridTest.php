@@ -44,9 +44,6 @@ class GetShippingItemsGridTest extends TestCase
      */
     protected $controller;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $this->requestMock = $this->getMockBuilder(Http::class)
@@ -87,10 +84,8 @@ class GetShippingItemsGridTest extends TestCase
 
     /**
      * Run test execute method
-     *
-     * @return void
      */
-    public function testExecute(): void
+    public function testExecute()
     {
         $orderId = 1;
         $shipmentId = 1;
@@ -105,6 +100,22 @@ class GetShippingItemsGridTest extends TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
+        $this->requestMock->expects($this->at(0))
+            ->method('getParam')
+            ->with('order_id')
+            ->willReturn($orderId);
+        $this->requestMock->expects($this->at(1))
+            ->method('getParam')
+            ->with('shipment_id')
+            ->willReturn($shipmentId);
+        $this->requestMock->expects($this->at(2))
+            ->method('getParam')
+            ->with('shipment')
+            ->willReturn($shipment);
+        $this->requestMock->expects($this->at(3))
+            ->method('getParam')
+            ->with('tracking')
+            ->willReturn($tracking);
         $this->shipmentLoaderMock->expects($this->once())->method('setOrderId')->with($orderId);
         $this->shipmentLoaderMock->expects($this->once())->method('setShipmentId')->with($shipmentId);
         $this->shipmentLoaderMock->expects($this->once())->method('setShipment')->with($shipment);
@@ -120,10 +131,9 @@ class GetShippingItemsGridTest extends TestCase
         $this->responseMock->expects($this->once())
             ->method('setBody')
             ->with($result)->willReturnSelf();
-        $this->requestMock
+        $this->requestMock->expects($this->at(4))
             ->method('getParam')
-            ->withConsecutive(['order_id'], ['shipment_id'], ['shipment'], ['tracking'], ['index'])
-            ->willReturnOnConsecutiveCalls($orderId, $shipmentId, $shipment, $tracking);
+            ->with('index');
         $gridMock->expects($this->once())
             ->method('setIndex')->willReturnSelf();
         $gridMock->expects($this->once())

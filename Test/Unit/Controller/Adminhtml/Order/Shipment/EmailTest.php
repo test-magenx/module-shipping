@@ -90,9 +90,6 @@ class EmailTest extends TestCase
      */
     protected $shipmentLoader;
 
-    /**
-     * @inheritDoc
-     */
     protected function setUp(): void
     {
         $objectManagerHelper = new ObjectManagerHelper($this);
@@ -120,8 +117,9 @@ class EmailTest extends TestCase
             ->onlyMethods(['sendResponse'])
             ->getMockForAbstractClass();
         $this->request = $this->getMockBuilder(RequestInterface::class)
-            ->onlyMethods(
+            ->setMethods(
                 [
+                    'isPost',
                     'getModuleName',
                     'setModuleName',
                     'getActionName',
@@ -129,7 +127,7 @@ class EmailTest extends TestCase
                     'getParam',
                     'getCookie',
                 ]
-            )->addMethods(['isPost'])
+            )
             ->getMockForAbstractClass();
         $this->objectManager = $this->createPartialMock(
             ObjectManager::class,
@@ -172,10 +170,7 @@ class EmailTest extends TestCase
         );
     }
 
-    /**
-     * @return void
-     */
-    public function testEmail(): void
+    public function testEmail()
     {
         $shipmentId = 1000012;
         $orderId = 10003;
@@ -194,7 +189,7 @@ class EmailTest extends TestCase
                     ['order_id', null, $orderId],
                     ['shipment_id', null, $shipmentId],
                     ['shipment', null, $shipment],
-                    ['tracking', null, $tracking]
+                    ['tracking', null, $tracking],
                 ]
             );
         $this->shipmentLoader->expects($this->once())
@@ -227,7 +222,7 @@ class EmailTest extends TestCase
             ->with('You sent the shipment.');
         $path = '*/*/view';
         $arguments = ['shipment_id' => $shipmentId];
-        $this->prepareRedirect($path, $arguments);
+        $this->prepareRedirect($path, $arguments, 0);
 
         $this->shipmentEmail->execute();
         $this->assertEquals($this->response, $this->shipmentEmail->getResponse());
@@ -236,10 +231,9 @@ class EmailTest extends TestCase
     /**
      * @param string $path
      * @param array $arguments
-     *
-     * @return void
+     * @param int $index
      */
-    protected function prepareRedirect(string $path, array $arguments): void
+    protected function prepareRedirect($path, $arguments, $index)
     {
         $this->actionFlag->expects($this->any())
             ->method('get')
@@ -248,7 +242,7 @@ class EmailTest extends TestCase
         $this->session->expects($this->any())
             ->method('setIsUrlNotice')
             ->with(true);
-        $this->resultRedirect
+        $this->resultRedirect->expects($this->at($index))
             ->method('setPath')
             ->with($path, ['shipment_id' => $arguments['shipment_id']]);
     }

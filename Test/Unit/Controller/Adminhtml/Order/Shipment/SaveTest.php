@@ -131,27 +131,29 @@ class SaveTest extends TestCase
     protected function setUp(): void
     {
         $objectManagerHelper = new ObjectManagerHelper($this);
-        $this->shipmentLoader = $this->getMockBuilder(ShipmentLoader::class)
+        $this->shipmentLoader = $this->getMockBuilder(
+            ShipmentLoader::class
+        )
             ->disableOriginalConstructor()
-            ->onlyMethods(['load'])
-            ->addMethods(['setShipmentId', 'setOrderId', 'setShipment', 'setTracking'])
+            ->setMethods(['setShipmentId', 'setOrderId', 'setShipment', 'setTracking', 'load'])
             ->getMock();
         $this->validationResult = $this->getMockBuilder(ValidatorResultInterface::class)
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
         $this->labelGenerator = $this->getMockBuilder(LabelGenerator::class)
             ->disableOriginalConstructor()
+            ->setMethods([])
             ->getMock();
         $this->shipmentSender = $this->getMockBuilder(ShipmentSender::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['send'])
+            ->setMethods(['send'])
             ->getMock();
         $this->shipmentSender->expects($this->any())
             ->method('send')
             ->willReturn(true);
         $this->salesData = $this->getMockBuilder(SalesData::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['canSendNewShipmentEmail'])
+            ->setMethods(['canSendNewShipmentEmail'])
             ->getMock();
         $this->objectManager = $this->getMockForAbstractClass(ObjectManagerInterface::class);
         $this->context = $this->createPartialMock(Context::class, [
@@ -255,10 +257,8 @@ class SaveTest extends TestCase
      * @param string $sendEmail
      * @param bool $emailEnabled
      * @param bool $shouldEmailBeSent
-     *
-     * @return void
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      * @dataProvider executeDataProvider
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function testExecute(
         $formKeyIsValid,
@@ -266,7 +266,7 @@ class SaveTest extends TestCase
         $sendEmail,
         $emailEnabled,
         $shouldEmailBeSent
-    ): void {
+    ) {
         $this->formKeyValidator->expects($this->any())
             ->method('validate')
             ->willReturn($formKeyIsValid);
@@ -305,7 +305,7 @@ class SaveTest extends TestCase
                         ['order_id', null, $orderId],
                         ['shipment_id', null, $shipmentId],
                         ['shipment', null, $shipmentData],
-                        ['tracking', null, $tracking]
+                        ['tracking', null, $tracking],
                     ]
                 );
 
@@ -345,11 +345,16 @@ class SaveTest extends TestCase
                 ->willReturn(true);
             $saveTransaction = $this->getMockBuilder(Transaction::class)
                 ->disableOriginalConstructor()
+                ->setMethods([])
                 ->getMock();
-            $saveTransaction
+            $saveTransaction->expects($this->at(0))
                 ->method('addObject')
-                ->withConsecutive([$shipment], [$order])
-                ->willReturnOnConsecutiveCalls($saveTransaction, $saveTransaction);
+                ->with($shipment)->willReturnSelf();
+            $saveTransaction->expects($this->at(1))
+                ->method('addObject')
+                ->with($order)->willReturnSelf();
+            $saveTransaction->expects($this->at(2))
+                ->method('save');
 
             $this->session->expects($this->once())
                 ->method('getCommentText')
@@ -386,7 +391,7 @@ class SaveTest extends TestCase
     /**
      * @return array
      */
-    public function executeDataProvider(): array
+    public function executeDataProvider()
     {
         /**
         * bool $formKeyIsValid
@@ -409,10 +414,8 @@ class SaveTest extends TestCase
 
     /**
      * @param array $arguments
-     *
-     * @return void
      */
-    protected function prepareRedirect(array $arguments = []): void
+    protected function prepareRedirect(array $arguments = [])
     {
         $this->actionFlag->expects($this->any())
             ->method('get')
